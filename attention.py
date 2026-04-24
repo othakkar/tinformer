@@ -17,12 +17,16 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
   attn = jax.nn.softmax(scores, axis=-1)
   return jnp.matmul(attn, V)
 
-def multi_head_attention(X, W_q, W_k, W_v, W_o, mask=None):
+def multi_head_attention(X, W_q, W_k, W_v, W_o, H, mask=None):
   # X: (B, T, D_model)
   # W_q: (D_model, H * D_k)
   # W_k: (D_model, H * D_k)
   # W_v: (D_model, H * D_v)
   # W_o: (H * D_v, D_model)
+  
+  B, T, D_model = X.shape
+  D_k = W_q.shape[-1] // H
+  D_v = W_v.shape[-1] // H
 
   Q = jnp.dot(X, W_q)  # (B, T, H * D_k)
   Q = Q.reshape(B, T, H, D_k).transpose(0, 2, 1, 3)  # (B, H, T, D_k)
@@ -31,7 +35,7 @@ def multi_head_attention(X, W_q, W_k, W_v, W_o, mask=None):
   V = jnp.dot(X, W_v)  # (B, T, H * D_v)
   V = V.reshape(B, T, H, D_v).transpose(0, 2, 1, 3)  # (B, H, T, D_v)
 
-  Z = scaled_dot_product_attention(Q, K, V, mask=causal_mask)  # (B, H, T, D_v)
+  Z = scaled_dot_product_attention(Q, K, V, mask=mask)  # (B, H, T, D_v)
 
   Z = Z.transpose(0, 2, 1, 3).reshape(B, T, H * D_v)  # (B, T, H * D_v)
 
@@ -55,5 +59,5 @@ W_o = jax.random.normal(jax.random.PRNGKey(4), (H * D_v, D_model))
 
 causal_mask = jnp.tril(jnp.ones((T, T), dtype=bool))  # (T, T), True = keep
 
-output = multi_head_attention(X, W_q, W_k, W_v, None, mask=causal_mask)
+output = multi_head_attention(X, W_q, W_k, W_v, W_o, H, mask=causal_mask)
 print(output.shape)  # (B, T, D_model)
