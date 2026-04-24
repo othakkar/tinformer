@@ -42,22 +42,22 @@ def multi_head_attention(X, W_q, W_k, W_v, W_o, H, mask=None):
   output = jnp.dot(Z, W_o)  # (B, T, D_model)
   return output
   
+if __name__ == "__main__":
+  B = 16  # batch size
+  T = 128  # sequence length
+  D_model = 512  # embedding dimension
+  D_k = 32  # dimension of the key and query vectors
+  D_v = 32  # dimension of the value vectors
+  H = 8  # number of attention heads
 
-B = 16  # batch size
-T = 128  # sequence length
-D_model = 512  # embedding dimension
-D_k = 32  # dimension of the key and query vectors
-D_v = 32  # dimension of the value vectors
-H = 8  # number of attention heads
+  # Random input data and weight matrices
+  X = jax.random.normal(jax.random.PRNGKey(0), (B, T, D_model))
+  W_q = jax.random.normal(jax.random.PRNGKey(1), (D_model, H * D_k))
+  W_k = jax.random.normal(jax.random.PRNGKey(2), (D_model, H * D_k))
+  W_v = jax.random.normal(jax.random.PRNGKey(3), (D_model, H * D_v))
+  W_o = jax.random.normal(jax.random.PRNGKey(4), (H * D_v, D_model))
 
-# Random input data and weight matrices
-X = jax.random.normal(jax.random.PRNGKey(0), (B, T, D_model))
-W_q = jax.random.normal(jax.random.PRNGKey(1), (D_model, H * D_k))
-W_k = jax.random.normal(jax.random.PRNGKey(2), (D_model, H * D_k))
-W_v = jax.random.normal(jax.random.PRNGKey(3), (D_model, H * D_v))
-W_o = jax.random.normal(jax.random.PRNGKey(4), (H * D_v, D_model))
+  causal_mask = jnp.tril(jnp.ones((T, T), dtype=bool))  # (T, T), True = keep
 
-causal_mask = jnp.tril(jnp.ones((T, T), dtype=bool))  # (T, T), True = keep
-
-output = multi_head_attention(X, W_q, W_k, W_v, W_o, H, mask=causal_mask)
-print(output.shape)  # (B, T, D_model)
+  output = multi_head_attention(X, W_q, W_k, W_v, W_o, H, mask=causal_mask)
+  print("Attention output shape:", output.shape)  # (B, T, D_model)

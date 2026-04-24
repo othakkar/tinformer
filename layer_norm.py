@@ -13,14 +13,15 @@ def layer_norm(X, scale, bias, eps=1e-6):
   output = scale * X_norm + bias # (B, T, D_model)
   return output 
 
-B = 16  # batch size
-T = 128  # sequence length
-D_model = 512  # embedding dimension
+if __name__ == "__main__":
+  B = 16  # batch size
+  T = 128  # sequence length
+  D_model = 512  # embedding dimension
 
-# Random input data and weight matrices
-X = jax.random.normal(jax.random.PRNGKey(0), (B, T, D_model))
-scale = jnp.ones((D_model,))
-bias = jnp.zeros((D_model,))
+  # Random input data and weight matrices
+  X = jax.random.normal(jax.random.PRNGKey(0), (B, T, D_model))
+  scale = jnp.ones((D_model,))
+  bias = jnp.zeros((D_model,))
 
-output = layer_norm(X, scale, bias)
-print(output.shape) # (B, T, D_model)
+  output = layer_norm(X, scale, bias)
+  print(output.shape) # (B, T, D_model)
