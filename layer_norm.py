@@ -19,8 +19,8 @@ D_model = 512  # embedding dimension
 
 # Random input data and weight matrices
 X = jax.random.normal(jax.random.PRNGKey(0), (B, T, D_model))
-scale = jnp.ones(jax.random.PRNGKey(1), (D_model,))
-bias = jnp.zeros(jax.random.PRNGKey(2), (D_model,))
+scale = jnp.ones((D_model,))
+bias = jnp.zeros((D_model,))
 
 output = layer_norm(X, scale, bias)
 print(output.shape) # (B, T, D_model)
