@@ -34,7 +34,6 @@ def multi_head_attention(X, W_q, W_k, W_v, W_o, mask=None):
   Z = scaled_dot_product_attention(Q, K, V, mask=causal_mask)  # (B, H, T, D_v)
 
   Z = Z.transpose(0, 2, 1, 3).reshape(B, T, H * D_v)  # (B, T, H * D_v)
-  W_o = jax.random.normal(jax.random.PRNGKey(4), (H * D_v, D_model))
 
   output = jnp.dot(Z, W_o)  # (B, T, D_model)
   return output
@@ -52,6 +51,7 @@ X = jax.random.normal(jax.random.PRNGKey(0), (B, T, D_model))
 W_q = jax.random.normal(jax.random.PRNGKey(1), (D_model, H * D_k))
 W_k = jax.random.normal(jax.random.PRNGKey(2), (D_model, H * D_k))
 W_v = jax.random.normal(jax.random.PRNGKey(3), (D_model, H * D_v))
+W_o = jax.random.normal(jax.random.PRNGKey(4), (H * D_v, D_model))
 
 causal_mask = jnp.tril(jnp.ones((T, T), dtype=bool))  # (T, T), True = keep
 
