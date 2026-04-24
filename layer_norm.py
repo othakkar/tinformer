@@ -24,4 +24,4 @@ if __name__ == "__main__":
   bias = jnp.zeros((D_model,))
 
   output = layer_norm(X, scale, bias)
-  print(output.shape) # (B, T, D_model)
+  print("LayerNorm output shape: ", output.shape)
