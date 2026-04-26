@@ -1,27 +1,22 @@
 import jax
 import jax.numpy as jnp
 
-def layer_norm(X, scale, bias, eps=1e-6):
-  # X: (B, T, D_model)
-  # scale: (D_model,)
-  # bias: (D_model,)
+class LayerNorm:
+  def __init__(self, D_model, eps=1e-6):
+    self.scale = jnp.ones((D_model,))
+    self.bias = jnp.zeros((D_model,))
+    self.eps = eps
 
-  mean_X = jnp.mean(X, axis=-1, keepdims=True) # (B, T, 1)
-  var_X = jnp.var(X, axis=-1, keepdims=True) # (B, T, 1)
-
-  X_norm = (X - mean_X) / jnp.sqrt(var_X + eps) # (B, T, D_model)
-  output = scale * X_norm + bias # (B, T, D_model)
-  return output 
+  def __call__(self, X):
+    mean_X = jnp.mean(X, axis=-1, keepdims=True) # (B, T, 1)
+    var_X = jnp.var(X, axis=-1, keepdims=True) # (B, T, 1)
+    X_norm = (X - mean_X) / jnp.sqrt(var_X + self.eps) # (B, T, D_model)
+    output = self.scale * X_norm + self.bias # (B, T, D_model)
+    return output
 
 if __name__ == "__main__":
-  B = 16  # batch size
-  T = 128  # sequence length
-  D_model = 512  # embedding dimension
-
-  # Random input data and weight matrices
-  X = jax.random.normal(jax.random.PRNGKey(0), (B, T, D_model))
-  scale = jnp.ones((D_model,))
-  bias = jnp.zeros((D_model,))
-
-  output = layer_norm(X, scale, bias)
-  print("LayerNorm output shape: ", output.shape)
+  from config import GPTConfig
+  config = GPTConfig()
+  ln = LayerNorm(config.D_model)
+  X = jax.random.normal(jax.random.PRNGKey(0), (config.B, config.T, config.D_model))
+  print("LayerNorm output shape: ", ln(X).shape)

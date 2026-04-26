@@ -17,47 +17,35 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
   attn = jax.nn.softmax(scores, axis=-1)
   return jnp.matmul(attn, V)
 
-def multi_head_attention(X, W_q, W_k, W_v, W_o, H, mask=None):
-  # X: (B, T, D_model)
-  # W_q: (D_model, H * D_k)
-  # W_k: (D_model, H * D_k)
-  # W_v: (D_model, H * D_v)
-  # W_o: (H * D_v, D_model)
+class MultiHeadAttention:
+  def __init__(self, D_model, D_k, D_v, H, key=jax.random.PRNGKey(0)):
+    self.H = H
+    self.D_k = D_k
+    self.D_v = D_v
+
+    keys = jax.random.split(key, 4)
+    self.W_q = jax.random.normal(keys[0], (D_model, H * D_k))
+    self.W_k = jax.random.normal(keys[1], (D_model, H * D_k))
+    self.W_v = jax.random.normal(keys[2], (D_model, H * D_v))
+    self.W_o = jax.random.normal(keys[3], (H * D_v, D_model))
   
-  B, T, D_model = X.shape
-  D_k = W_q.shape[-1] // H
-  D_v = W_v.shape[-1] // H
+  def __call__(self, X, mask=None):
+    B, T, D_model = X.shape
 
-  Q = jnp.dot(X, W_q)  # (B, T, H * D_k)
-  Q = Q.reshape(B, T, H, D_k).transpose(0, 2, 1, 3)  # (B, H, T, D_k)
-  K = jnp.dot(X, W_k)  # (B, T, H * D_k)
-  K = K.reshape(B, T, H, D_k).transpose(0, 2, 1, 3)  # (B, H, T, D_k)
-  V = jnp.dot(X, W_v)  # (B, T, H * D_v)
-  V = V.reshape(B, T, H, D_v).transpose(0, 2, 1, 3)  # (B, H, T, D_v)
-
-  Z = scaled_dot_product_attention(Q, K, V, mask=mask)  # (B, H, T, D_v)
-
-  Z = Z.transpose(0, 2, 1, 3).reshape(B, T, H * D_v)  # (B, T, H * D_v)
-
-  output = jnp.dot(Z, W_o)  # (B, T, D_model)
-  return output
+    Q = jnp.dot(X, self.W_q) # (B, T, H * D_k)
+    Q = Q.reshape(B, T, self.H, self.D_k).transpose(0, 2, 1, 3) # (B, H, T, D_k)
+    K = jnp.dot(X, self.W_k) # (B, T, H * D_k)
+    K = K.reshape(B, T, self.H, self.D_k).transpose(0, 2, 1, 3) # (B, H, T, D_k)
+    V = jnp.dot(X, self.W_v) # (B, T, H * D_v)
+    V = V.reshape(B, T, self.H, self.D_v).transpose(0, 2, 1, 3) # (B, H, T, D_v)
+    Z = scaled_dot_product_attention(Q, K, V, mask=mask) # (B, H, T, D_v)
+    Z = Z.transpose(0, 2, 1, 3).reshape(B, T, self.H * self.D_v) # (B, T, H * D_v)
+    return jnp.dot(Z, self.W_o) # (B, T, D_model)
   
 if __name__ == "__main__":
-  B = 16  # batch size
-  T = 128  # sequence length
-  D_model = 512  # embedding dimension
-  D_k = 32  # dimension of the key and query vectors
-  D_v = 32  # dimension of the value vectors
-  H = 8  # number of attention heads
-
-  # Random input data and weight matrices
-  X = jax.random.normal(jax.random.PRNGKey(0), (B, T, D_model))
-  W_q = jax.random.normal(jax.random.PRNGKey(1), (D_model, H * D_k))
-  W_k = jax.random.normal(jax.random.PRNGKey(2), (D_model, H * D_k))
-  W_v = jax.random.normal(jax.random.PRNGKey(3), (D_model, H * D_v))
-  W_o = jax.random.normal(jax.random.PRNGKey(4), (H * D_v, D_model))
-
-  causal_mask = jnp.tril(jnp.ones((T, T), dtype=bool))  # (T, T), True = keep
-
-  output = multi_head_attention(X, W_q, W_k, W_v, W_o, H, mask=causal_mask)
-  print("Attention output shape:", output.shape)  # (B, T, D_model)
+  from config import GPTConfig
+  config = GPTConfig()
+  mha = MultiHeadAttention(config.D_model, config.D_k, config.D_v, config.H)
+  X = jax.random.normal(jax.random.PRNGKey(0), (config.B, config.T, config.D_model))
+  mask = jnp.tril(jnp.ones((config.T, config.T), dtype=bool)) # (T, T)
+  print("MultiHeadAttention output shape: ", mha(X, mask=mask).shape)
