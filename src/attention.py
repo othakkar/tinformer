@@ -49,7 +49,7 @@ class MultiHeadAttention:
     return output, (K, V)
   
 if __name__ == "__main__":
-  from config import GPTConfig
+  from .config import GPTConfig
   config = GPTConfig()
   mha = MultiHeadAttention(config.D_model, config.D_k, config.D_v, config.H)
   X = jax.random.normal(jax.random.PRNGKey(0), (config.B, config.T, config.D_model))

@@ -15,7 +15,7 @@ class LayerNorm:
     return output
 
 if __name__ == "__main__":
-  from config import GPTConfig
+  from .config import GPTConfig
   config = GPTConfig()
   ln = LayerNorm(config.D_model)
   X = jax.random.normal(jax.random.PRNGKey(0), (config.B, config.T, config.D_model))
