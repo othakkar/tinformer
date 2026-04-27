@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src'))  # Add the src directory to the Python path
+
 from mini_gpt import MiniGPT
 from config import GPTConfig
 
