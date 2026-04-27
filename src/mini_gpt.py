@@ -45,5 +45,5 @@ if __name__ == "__main__":
   T = config.T
   token_ids = jax.random.randint(jax.random.PRNGKey(0), (B, T), minval=0, maxval=config.vocab_size)
 
-  logits = model.forward(token_ids)
+  logits, caches = model.forward(token_ids)
   print("Logits shape: ", logits.shape)

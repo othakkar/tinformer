@@ -27,4 +27,5 @@ if __name__ == "__main__":
   block = DecoderBlock(config.D_model, config.D_k, config.D_v, config.H)
   X = jax.random.normal(jax.random.PRNGKey(0), (config.B, config.T, config.D_model))
   mask = jnp.tril(jnp.ones((config.T, config.T)), dtype=bool)
-  print("Decoder output shape: ", block(X, mask).shape)
+  out, kv_cache = block(X, mask)
+  print("Decoder output shape: ", out.shape)
