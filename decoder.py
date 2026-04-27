@@ -16,15 +16,15 @@ class DecoderBlock:
     self.W2 = jax.random.normal(keys[2], (4 * D_model, D_model))
     self.b2 = jax.random.normal(keys[2], (D_model,))
   
-  def __call__(self, hidden_states, attention_mask=None):
+  def __call__(self, hidden_states, attention_mask=None, kv_cache=None):
     normed_hidden_states = self.ln1(hidden_states)
-    attention_out = self.attn(normed_hidden_states, mask=attention_mask)
+    attention_out, new_kv_cache = self.attn(normed_hidden_states, mask=attention_mask, kv_cache=kv_cache)
     residual_after_attention = attention_out + hidden_states
     normed_residual = self.ln2(residual_after_attention)
     ffn_hidden = jnp.dot(normed_residual, self.W1) + self.b1
     ffn_act = jax.nn.gelu(ffn_hidden)
     ffn_out = jnp.dot(ffn_act, self.W2) + self.b2
-    return ffn_out + residual_after_attention
+    return ffn_out + residual_after_attention, new_kv_cache
 
 if __name__ == "__main__":
   from config import GPTConfig
