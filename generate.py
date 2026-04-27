@@ -41,13 +41,16 @@ if __name__ == "__main__":
   input_prompt_token_ids = jax.random.randint(jax.random.PRNGKey(0), (config.B, config.T), minval=0, maxval=config.vocab_size)
 
   start_time = time.time()
-  generated_token_ids = naive_generate(model, input_prompt_token_ids, num_tokens_to_generate)
+  naively_generated_token_ids = naive_generate(model, input_prompt_token_ids, num_tokens_to_generate)
   end_time = time.time()
-  print(f"Generated token IDs shape: {generated_token_ids.shape}")
+  print(f"Generated token IDs shape: {naively_generated_token_ids.shape}")
   print(f"naive_generate: Time taken to generate {num_tokens_to_generate} tokens: {end_time - start_time:.2f} seconds")
 
   start_time = time.time()
-  generated_token_ids = cached_generate(model, input_prompt_token_ids, num_tokens_to_generate)
+  cached_generated_token_ids = cached_generate(model, input_prompt_token_ids, num_tokens_to_generate)
   end_time = time.time()
-  print(f"Generated token IDs shape: {generated_token_ids.shape}")
+  print(f"Generated token IDs shape: {cached_generated_token_ids.shape}")
   print(f"cached_generate: Time taken to generate {num_tokens_to_generate} tokens: {end_time - start_time:.2f} seconds")
+
+  # Verify correctness with KV cache
+  print("Generated tokens match between naive and cached generation: ", jnp.allclose(naively_generated_token_ids, cached_generated_token_ids))
