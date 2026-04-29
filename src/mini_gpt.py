@@ -6,9 +6,8 @@ import jax
 import jax.numpy as jnp
 
 class MiniGPT:
-  def __init__(self, config: GPTConfig):
-    self.config = config
-    keys = jax.random.split(jax.random.PRNGKey(0), self.config.N + 3)
+  def __init__(self, config: GPTConfig, key=jax.random.PRNGKey(0)):
+    keys = jax.random.split(key, config.N + 3)
 
     self.tok_embeddings = jax.random.normal(keys[0], (config.vocab_size, config.D_model))
     self.pos_embeddings = jax.random.normal(keys[1], (config.max_seq_len, config.D_model))
