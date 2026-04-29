@@ -1,9 +1,9 @@
 import jax
 import jax.numpy as jnp
 
-from .attention import MultiHeadAttention
-from .layer_norm import LayerNorm
-from .ffn import FFN
+from attention import MultiHeadAttention
+from layernorm import LayerNorm
+from ffn import FFN
 
 class DecoderBlock:
   def __init__(self, D_model, D_k, D_v, H, key=jax.random.PRNGKey(0)):
@@ -22,7 +22,7 @@ class DecoderBlock:
     return self.ffn(normed_residual) + residual_after_attention, new_kv_cache
 
 if __name__ == "__main__":
-  from .config import GPTConfig
+  from config import GPTConfig
   config = GPTConfig()
   block = DecoderBlock(config.D_model, config.D_k, config.D_v, config.H)
   X = jax.random.normal(jax.random.PRNGKey(0), (config.B, config.T, config.D_model))

@@ -1,6 +1,6 @@
-from .decoder import DecoderBlock
-from .layer_norm import LayerNorm
-from .config import GPTConfig
+from decoder import DecoderBlock
+from layernorm import LayerNorm
+from config import GPTConfig
 
 import jax
 import jax.numpy as jnp
