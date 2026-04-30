@@ -1,13 +1,13 @@
 """Verify output shapes of each component."""
 import jax
 import jax.numpy as jnp
-from config import GPTConfig
+from config import TinformerConfig
 from attention import MultiHeadAttention
 from ffn import FFN  # assuming similar interface
 from decoder import DecoderBlock
-from mini_gpt import MiniGPT
+from tinformer import Tinformer
 
-config = GPTConfig()
+config = TinformerConfig()
 B, T, D = config.B, config.T, config.D_model
 
 def test_mha_output_shape():
@@ -19,8 +19,8 @@ def test_mha_output_shape():
     assert K.shape == (B, config.H, T, config.D_k)
     assert V.shape == (B, config.H, T, config.D_v)
 
-def test_mini_gpt_output_shape():
-    model = MiniGPT(config)
+def test_tinformer_output_shape():
+    model = Tinformer(config)
     token_ids = jax.random.randint(jax.random.PRNGKey(0), (B, T), 0, config.vocab_size)
     logits, caches = model.forward(token_ids)
     assert logits.shape == (B, T, config.vocab_size)

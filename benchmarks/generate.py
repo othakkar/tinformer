@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src'))  # Add the src directory to the Python path
 
-from mini_gpt import MiniGPT
+from tinformer import Tinformer
 from config import GPTConfig
 
 import jax
@@ -38,7 +38,7 @@ def cached_generate(model, input_prompt_token_ids, num_tokens_to_generate):
 
 if __name__ == "__main__":
   config = GPTConfig()
-  model = MiniGPT(config)
+  model = Tinformer(config)
   num_tokens_to_generate = 100
 
   # Dummy input token IDs

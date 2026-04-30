@@ -49,8 +49,8 @@ class MultiHeadAttention:
     return output, (K, V)
   
 if __name__ == "__main__":
-  from .config import GPTConfig
-  config = GPTConfig()
+  from .config import TinformerConfig
+  config = TinformerConfig()
   mha = MultiHeadAttention(config.D_model, config.D_k, config.D_v, config.H)
   X = jax.random.normal(jax.random.PRNGKey(0), (config.B, config.T, config.D_model))
   mask = jnp.tril(jnp.ones((config.T, config.T), dtype=bool)) # (T, T)

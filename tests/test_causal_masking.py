@@ -1,12 +1,12 @@
 """Verify causal masking: changing future tokens doesn't affect past logits."""
 import jax
 import jax.numpy as jnp
-from mini_gpt import MiniGPT
-from config import GPTConfig
+from tinformer import Tinformer
+from config import TinformerConfig
 
 def test_causal_no_leakage():
-    config = GPTConfig()
-    model = MiniGPT(config)
+    config = TinformerConfig()
+    model = Tinformer(config)
     
     tokens_a = jax.random.randint(jax.random.PRNGKey(0), (1, 10), 0, config.vocab_size)
     tokens_b = tokens_a.at[:, 5:].set(0)  # Change future tokens

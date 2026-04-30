@@ -1,2 +1,2 @@
-# kv-cache-lab
-Mini GPT decoder in JAX with KV caching implemented from scratch. Benchmarks and visualizations included.
+# Tinformer
+A tiny decoder-only transformer built from scratch in JAX. No framework magic, no pretrained weights. Every component (attention, layer norm, FFN, KV caching) is implemented by hand to understand the mechanics of autoregressive generation.

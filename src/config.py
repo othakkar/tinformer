@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 @dataclass
-class GPTConfig:
+class TinformerConfig:
   B: int = 16
   T: int = 128
   D_model: int = 512

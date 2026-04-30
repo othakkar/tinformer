@@ -13,8 +13,8 @@ class FFN:
     return jnp.dot(jax.nn.gelu(jnp.dot(X, self.W1) + self.b1), self.W2) + self.b2
 
 if __name__ == "__main__":
-  from .config import GPTConfig
-  config = GPTConfig()
+  from .config import TinformerConfig
+  config = TinformerConfig()
   ffn = FFN(config.D_model)
   X = jax.random.normal(jax.random.PRNGKey(0), (config.B, config.T, config.D_model))
   print("FFN output shape: ", ffn(X).shape)

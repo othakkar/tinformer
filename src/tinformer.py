@@ -1,12 +1,12 @@
 from decoder import DecoderBlock
 from layernorm import LayerNorm
-from config import GPTConfig
+from config import TinformerConfig
 
 import jax
 import jax.numpy as jnp
 
-class MiniGPT:
-  def __init__(self, config: GPTConfig, key=jax.random.PRNGKey(0)):
+class Tinformer:
+  def __init__(self, config: TinformerConfig, key=jax.random.PRNGKey(0)):
     keys = jax.random.split(key, config.N + 3)
 
     self.tok_embeddings = jax.random.normal(keys[0], (config.vocab_size, config.D_model))
@@ -36,8 +36,8 @@ class MiniGPT:
 
 
 if __name__ == "__main__":
-  config = GPTConfig()
-  model = MiniGPT(config)
+  config = TinformerConfig()
+  model = Tinformer(config)
 
   # Dummy input token IDs
   B = config.B

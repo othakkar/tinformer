@@ -22,8 +22,8 @@ class DecoderBlock:
     return self.ffn(normed_residual) + residual_after_attention, new_kv_cache
 
 if __name__ == "__main__":
-  from config import GPTConfig
-  config = GPTConfig()
+  from config import TinformerConfig
+  config = TinformerConfig()
   block = DecoderBlock(config.D_model, config.D_k, config.D_v, config.H)
   X = jax.random.normal(jax.random.PRNGKey(0), (config.B, config.T, config.D_model))
   mask = jnp.tril(jnp.ones((config.T, config.T)), dtype=bool)
