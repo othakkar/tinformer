@@ -1,9 +1,13 @@
 import jax
 import jax.numpy as jnp
 
+from .config import TinformerConfig
+
 def scaled_dot_product_attention(Q, K, V, mask=None):
   D_k = Q.shape[-1]
-  scores = jnp.matmul(Q, jnp.swapaxes(K, -1, -2)) / jnp.sqrt(D_k)
+  scores = (
+    jnp.matmul(Q, jnp.swapaxes(K, -1, -2)) / jnp.sqrt(D_k)
+  )
 
   if mask is not None:
     scores = jnp.where(mask, scores, -jnp.inf)
@@ -23,27 +27,19 @@ class MultiHeadAttention:
     self.W_v = jax.random.normal(keys[2], (D_model, H * D_v))
     self.W_o = jax.random.normal(keys[3], (H * D_v, D_model))
   
-  def __call__(self, X, mask=None, kv_cache=None):
+  def __call__(self, X, mask=None):
     B, T, _ = X.shape
     Q = jnp.dot(X, self.W_q) # (B, T, H * D_k)
     Q = Q.reshape(B, T, self.H, self.D_k).transpose(0, 2, 1, 3) # (B, H, T, D_k)
-    K_new = jnp.dot(X, self.W_k) # (B, T, H * D_k)
-    K_new = K_new.reshape(B, T, self.H, self.D_k).transpose(0, 2, 1, 3) # (B, H, T, D_k)
-    V_new = jnp.dot(X, self.W_v) # (B, T, H * D_v)
-    V_new = V_new.reshape(B, T, self.H, self.D_v).transpose(0, 2, 1, 3) # (B, H, T, D_v)
-    if kv_cache is not None:
-      K_cached, V_cached = kv_cache
-      K = jnp.concatenate([K_cached, K_new], axis=2)
-      V = jnp.concatenate([V_cached, V_new], axis=2)
-    else:
-      K, V = K_new, V_new
+    K = jnp.dot(X, self.W_k) # (B, T, H * D_k)
+    K = K.reshape(B, T, self.H, self.D_k).transpose(0, 2, 1, 3) # (B, H, T, D_k)
+    V = jnp.dot(X, self.W_v) # (B, T, H * D_v)
+    V = V.reshape(B, T, self.H, self.D_v).transpose(0, 2, 1, 3) # (B, H, T, D_v)
     Z = scaled_dot_product_attention(Q, K, V, mask=mask) # (B, H, T, D_v)
     Z = Z.transpose(0, 2, 1, 3).reshape(B, T, self.H * self.D_v) # (B, T, H * D_v)
-    output = jnp.dot(Z, self.W_o) # (B, T, D_model)
-    return output, (K, V)
+    return jnp.dot(Z, self.W_o) # (B, T, D_model)
   
 if __name__ == "__main__":
-  from .config import TinformerConfig
   config = TinformerConfig()
   mha = MultiHeadAttention(config.D_model, config.D_k, config.D_v, config.H)
   X = jax.random.normal(jax.random.PRNGKey(0), (config.B, config.T, config.D_model))

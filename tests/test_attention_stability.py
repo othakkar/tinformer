@@ -1,7 +1,7 @@
 """Test attention doesn't produce NaN/Inf under edge cases."""
-import jax
 import jax.numpy as jnp
-from attention import scaled_dot_product_attention
+
+from src.attention import scaled_dot_product_attention
 
 def test_no_nan_with_full_mask():
     """All positions masked — softmax over -inf should produce 0, not NaN in output."""
