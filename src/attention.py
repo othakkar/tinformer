@@ -2,14 +2,8 @@ import jax
 import jax.numpy as jnp
 
 def scaled_dot_product_attention(Q, K, V, mask=None):
-  # Q: (..., seq_len_q, d_k)
-  # K: (..., seq_len_k, d_k)
-  # V: (..., seq_len_k, d_v)
-  # mask (optional): broadcastable to (..., seq_len_q, seq_len_k) with 1/True = keep, 0/False = mask
-  # return: (..., seq_len_q, d_v)
-
-  d_k = Q.shape[-1]
-  scores = jnp.matmul(Q, jnp.swapaxes(K, -1, -2)) / jnp.sqrt(d_k)
+  D_k = Q.shape[-1]
+  scores = jnp.matmul(Q, jnp.swapaxes(K, -1, -2)) / jnp.sqrt(D_k)
 
   if mask is not None:
     scores = jnp.where(mask, scores, -jnp.inf)
