@@ -17,7 +17,7 @@ def generate(model, input_prompt_token_ids, num_tokens_to_generate):
 if __name__ == "__main__":
   config = TinformerConfig()
   model = Tinformer(config)
-  num_tokens_to_generate = 5
+  num_tokens_to_generate = 100
 
   # Dummy input token IDs
   input_prompt_token_ids = jax.random.randint(jax.random.PRNGKey(0), (config.B, config.T), minval=0, maxval=config.vocab_size)
