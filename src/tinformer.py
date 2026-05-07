@@ -1,6 +1,6 @@
-from .decoder import DecoderBlock
-from .layernorm import LayerNorm
-from .config import TinformerConfig
+from src.decoder import DecoderBlock
+from src.layernorm import LayerNorm
+from src.config import TinformerConfig
 
 import jax
 import jax.numpy as jnp

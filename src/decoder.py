@@ -1,10 +1,10 @@
 import jax
 import jax.numpy as jnp
 
-from .attention import MultiHeadAttention
-from .layernorm import LayerNorm
-from .ffn import FFN
-from .config import TinformerConfig
+from src.attention import MultiHeadAttention
+from src.layernorm import LayerNorm
+from src.ffn import FFN
+from src.config import TinformerConfig
 
 class DecoderBlock:
   def __init__(

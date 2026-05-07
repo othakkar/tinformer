@@ -1,7 +1,7 @@
 import jax
 import jax.numpy as jnp
 
-from .config import TinformerConfig
+from src.config import TinformerConfig
 
 class FFN:
   def __init__(self, D_model, key=jax.random.PRNGKey(0)):

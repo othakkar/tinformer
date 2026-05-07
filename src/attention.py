@@ -1,7 +1,7 @@
 import jax
 import jax.numpy as jnp
 
-from .config import TinformerConfig
+from src.config import TinformerConfig
 
 def scaled_dot_product_attention(Q, K, V, mask=None):
   D_k = Q.shape[-1]
