@@ -21,15 +21,23 @@ class Tinformer:
     self.final_ln = LayerNorm(config.D_model)
     self.W_logits = jax.random.normal(keys[-1], (config.D_model, config.vocab_size))    
 
-  def forward(self, token_ids):
-    T = token_ids.shape[-1]
-    causal_mask = jnp.tril(jnp.ones((T, T), dtype=bool))
-    X = self.tok_embeddings[token_ids] + self.pos_embeddings[:T, :]
-    for block in self.layers:
-      X = block(X, attention_mask=causal_mask)
+  def forward(self, token_ids, kv_caches=None):
+    T = token_ids.shape[-1]   # T=1 when kv_caches is not None
+    start_pos = 0 if kv_caches is None else kv_caches[0][0].shape[2] # kv_caches[0][0].shape[2] represents the seq len so far
+    S = start_pos + T
+    # Causal mask: lower triangular (prefill) or row (decode)
+    causal_mask = jnp.tril(jnp.ones((S, S), dtype=bool))[-T:, :]
+    # Add position embeddings (from 0:T for prefill, start_pos:start_pos+T for decode)
+    X = self.tok_embeddings[token_ids] + self.pos_embeddings[start_pos:start_pos + T, :]
+
+    all_new_caches = []
+    for i, block in enumerate(self.layers):
+      cache_i = kv_caches[i] if kv_caches is not None else None
+      X, new_cache = block(X, attention_mask=causal_mask, kv_cache=cache_i)
+      all_new_caches.append(new_cache)
 
     X_norm = self.final_ln(X)
-    return jnp.matmul(X_norm, self.W_logits)
+    return jnp.matmul(X_norm, self.W_logits), all_new_caches
 
 
 if __name__ == "__main__":
@@ -41,5 +49,5 @@ if __name__ == "__main__":
   T = config.T
   token_ids = jax.random.randint(jax.random.PRNGKey(0), (B, T), minval=0, maxval=config.vocab_size)
 
-  logits = model.forward(token_ids)
+  logits, _ = model.forward(token_ids)
   print("Logits shape: ", logits.shape)
