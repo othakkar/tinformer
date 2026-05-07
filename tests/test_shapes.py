@@ -19,5 +19,5 @@ def test_mha_output_shape():
 def test_tinformer_output_shape():
     model = Tinformer(config)
     token_ids = jax.random.randint(jax.random.PRNGKey(0), (B, T), 0, config.vocab_size)
-    logits = model.forward(token_ids)
+    logits, _ = model.forward(token_ids)
     assert logits.shape == (B, T, config.vocab_size)

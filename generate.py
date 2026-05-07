@@ -1,6 +1,7 @@
+import time
+
 import jax
 import jax.numpy as jnp
-import time
 
 from src.tinformer import Tinformer, TinformerConfig
 

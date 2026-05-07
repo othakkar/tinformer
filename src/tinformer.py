@@ -22,8 +22,9 @@ class Tinformer:
     self.W_logits = jax.random.normal(keys[-1], (config.D_model, config.vocab_size))    
 
   def forward(self, token_ids, kv_caches=None):
-    T = token_ids.shape[-1]   # T=1 when kv_caches is not None
-    start_pos = 0 if kv_caches is None else kv_caches[0][0].shape[2] # kv_caches[0][0].shape[2] represents the seq len so far
+    T = token_ids.shape[-1]  # T=1 when kv_caches is not None
+    # start_pos is the sequence length already cached (0 during prefill)
+    start_pos = 0 if kv_caches is None else kv_caches[0][0].shape[2]
     S = start_pos + T
     # Causal mask: lower triangular (prefill) or row (decode)
     causal_mask = jnp.tril(jnp.ones((S, S), dtype=bool))[-T:, :]

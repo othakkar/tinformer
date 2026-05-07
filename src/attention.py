@@ -28,7 +28,7 @@ class MultiHeadAttention:
     self.W_o = jax.random.normal(keys[3], (H * D_v, D_model))
   
   def __call__(self, X, mask=None, kv_cache=None):
-    B, T, _ = X.shape   # T=1 when kv_cache is not None
+    B, T, _ = X.shape  # T=1 when kv_cache is not None
     Q = jnp.dot(X, self.W_q) # (B, T, H * D_k)
     Q = Q.reshape(B, T, self.H, self.D_k).transpose(0, 2, 1, 3) # (B, H, T, D_k)
     K_new = jnp.dot(X, self.W_k) # (B, T, H * D_k)
