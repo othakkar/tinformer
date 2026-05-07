@@ -31,17 +31,17 @@ class MultiHeadAttention:
     B, T, _ = X.shape  # T=1 when kv_cache is not None
     Q = jnp.dot(X, self.W_q) # (B, T, H * D_k)
     Q = Q.reshape(B, T, self.H, self.D_k).transpose(0, 2, 1, 3) # (B, H, T, D_k)
-    K_new = jnp.dot(X, self.W_k) # (B, T, H * D_k)
-    K_new = K_new.reshape(B, T, self.H, self.D_k).transpose(0, 2, 1, 3) # (B, H, T, D_k)
-    V_new = jnp.dot(X, self.W_v) # (B, T, H * D_v)
-    V_new = V_new.reshape(B, T, self.H, self.D_v).transpose(0, 2, 1, 3) # (B, H, T, D_v)
+    K = jnp.dot(X, self.W_k) # (B, T, H * D_k)
+    K = K.reshape(B, T, self.H, self.D_k).transpose(0, 2, 1, 3) # (B, H, T, D_k)
+    V = jnp.dot(X, self.W_v) # (B, T, H * D_v)
+    V = V.reshape(B, T, self.H, self.D_v).transpose(0, 2, 1, 3) # (B, H, T, D_v)
 
     if kv_cache is not None:
       cached_K, cached_V = kv_cache
-      K = jnp.concatenate([cached_K, K_new], axis=2)
-      V = jnp.concatenate([cached_V, V_new], axis=2)
+      K = jnp.concatenate([cached_K, K], axis=2)
+      V = jnp.concatenate([cached_V, V], axis=2)
     else:
-      K, V = K_new, V_new
+      K, V = K, V
 
     Z = scaled_dot_product_attention(Q, K, V, mask=mask) # (B, H, T, D_v)
     Z = Z.transpose(0, 2, 1, 3).reshape(B, T, self.H * self.D_v) # (B, T, H * D_v)
