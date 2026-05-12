@@ -40,8 +40,6 @@ class MultiHeadAttention:
       cached_K, cached_V = kv_cache
       K = jnp.concatenate([cached_K, K], axis=2)
       V = jnp.concatenate([cached_V, V], axis=2)
-    else:
-      K, V = K, V
 
     Z = scaled_dot_product_attention(Q, K, V, mask=mask) # (B, H, T, D_v)
     Z = Z.transpose(0, 2, 1, 3).reshape(B, T, self.H * self.D_v) # (B, T, H * D_v)
