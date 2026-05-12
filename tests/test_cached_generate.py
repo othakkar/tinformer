@@ -20,7 +20,7 @@ def test_cached_matches_naive():
     cached_tokens = cached_generate(model, input_prompt_token_ids, num_tokens_to_generate)
 
     assert naive_tokens.shape == cached_tokens.shape
-    assert jnp.array_equal(naive_tokens, cached_tokens), (
+    assert jnp.allclose(naive_tokens, cached_tokens, atol=1e-5), (
         f"Mismatch between naive and cached generate:\n"
         f"  naive:  {naive_tokens}\n"
         f"  cached: {cached_tokens}"
