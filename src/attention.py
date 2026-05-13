@@ -1,3 +1,5 @@
+import math
+
 import jax
 import jax.numpy as jnp
 
@@ -22,10 +24,10 @@ class MultiHeadAttention:
     self.D_v = D_v
 
     keys = jax.random.split(key, 4)
-    self.W_q = jax.random.normal(keys[0], (D_model, H * D_k))
-    self.W_k = jax.random.normal(keys[1], (D_model, H * D_k))
-    self.W_v = jax.random.normal(keys[2], (D_model, H * D_v))
-    self.W_o = jax.random.normal(keys[3], (H * D_v, D_model))
+    self.W_q = jax.random.normal(keys[0], (D_model, H * D_k)) / math.sqrt(D_model)
+    self.W_k = jax.random.normal(keys[1], (D_model, H * D_k)) / math.sqrt(D_model)
+    self.W_v = jax.random.normal(keys[2], (D_model, H * D_v)) / math.sqrt(D_model)
+    self.W_o = jax.random.normal(keys[3], (H * D_v, D_model)) / math.sqrt(H * D_v)
   
   def __call__(self, X, mask=None, kv_cache=None):
     B, T, _ = X.shape  # T=1 when kv_cache is not None

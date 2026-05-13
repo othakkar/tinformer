@@ -2,6 +2,8 @@ from src.decoder import DecoderBlock
 from src.layernorm import LayerNorm
 from src.config import TinformerConfig
 
+import math
+
 import jax
 import jax.numpy as jnp
 
@@ -9,8 +11,8 @@ class Tinformer:
   def __init__(self, config: TinformerConfig, key=jax.random.PRNGKey(0)):
     keys = jax.random.split(key, config.N + 3)
 
-    self.tok_embeddings = jax.random.normal(keys[0], (config.vocab_size, config.D_model))
-    self.pos_embeddings = jax.random.normal(keys[1], (config.max_seq_len, config.D_model))
+    self.tok_embeddings = jax.random.normal(keys[0], (config.vocab_size, config.D_model)) / math.sqrt(config.D_model)
+    self.pos_embeddings = jax.random.normal(keys[1], (config.max_seq_len, config.D_model)) / math.sqrt(config.D_model)
 
     self.layers = [
       DecoderBlock(
@@ -19,7 +21,7 @@ class Tinformer:
     ]
 
     self.final_ln = LayerNorm(config.D_model)
-    self.W_logits = jax.random.normal(keys[-1], (config.D_model, config.vocab_size))    
+    self.W_logits = jax.random.normal(keys[-1], (config.D_model, config.vocab_size)) / math.sqrt(config.D_model)    
 
   def forward(self, token_ids, kv_caches=None):
     T = token_ids.shape[-1]  # T=1 when kv_caches is not None
