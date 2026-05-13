@@ -38,18 +38,21 @@ def run_benchmark(config, num_tokens_to_generate, warmup=True):
   model = Tinformer(config)
   prompt = jax.random.randint(jax.random.PRNGKey(0), (config.B, config.T), 0, config.vocab_size)
 
-  # Warmup run (JIT compilation)
+  # Warmup run: use full generation length to compile all intermediate shapes
   if warmup:
-    _ = cached_generate(model, prompt, 1)
+    naive_generate(model, prompt, num_tokens_to_generate).block_until_ready()
+    cached_generate(model, prompt, num_tokens_to_generate).block_until_ready()
 
   # Naive generation
   start = time.time()
   naive_out = naive_generate(model, prompt, num_tokens_to_generate)
+  naive_out.block_until_ready()
   naive_time = time.time() - start
 
   # Cached generation
   start = time.time()
   cached_out = cached_generate(model, prompt, num_tokens_to_generate)
+  cached_out.block_until_ready()
   cached_time = time.time() - start
 
   # Correctness check
@@ -182,6 +185,10 @@ def sweep_per_step_latency():
   prompt = jax.random.randint(jax.random.PRNGKey(0), (config.B, config.T), 0, config.vocab_size)
   num_steps = 50
 
+  # Warmup both paths: use full step count to compile all intermediate shapes
+  naive_generate(model, prompt, num_steps).block_until_ready()
+  cached_generate(model, prompt, num_steps).block_until_ready()
+
   # Naive: measure each step
   naive_step_times = []
   current_ids = prompt
@@ -191,6 +198,7 @@ def sweep_per_step_latency():
     probs = jax.nn.softmax(logits[:, -1, :])
     next_token = jnp.argmax(probs, axis=-1)
     current_ids = jnp.concatenate([current_ids, next_token[:, None]], axis=1)
+    current_ids.block_until_ready()
     naive_step_times.append(time.time() - start)
 
   # Cached: measure each step
@@ -199,6 +207,7 @@ def sweep_per_step_latency():
   logits, kv_caches = model.forward(prompt, kv_caches=None)
   probs = jax.nn.softmax(logits[:, -1, :])
   next_token = jnp.argmax(probs, axis=-1, keepdims=True)
+  next_token.block_until_ready()
   cached_step_times.append(time.time() - start)  # prefill step
 
   for i in range(num_steps - 1):
@@ -206,6 +215,7 @@ def sweep_per_step_latency():
     logits, kv_caches = model.forward(next_token, kv_caches=kv_caches)
     probs = jax.nn.softmax(logits[:, -1, :])
     next_token = jnp.argmax(probs, axis=-1, keepdims=True)
+    next_token.block_until_ready()
     cached_step_times.append(time.time() - start)
 
   header = ["Step", "Naive (ms)", "Cached (ms)"]
@@ -247,6 +257,14 @@ def kv_cache_memory_table():
 
 if __name__ == "__main__":
   print("\nKV Cache Benchmark Suite\n")
+
+  # Global warmup to absorb JAX startup cost
+  dummy_config = TinformerConfig(B=1, T=32, D_model=128, N=2, H=4)
+  dummy_model = Tinformer(dummy_config)
+  dummy_prompt = jax.random.randint(jax.random.PRNGKey(0), (1, 32), 0, 100)
+  naive_generate(dummy_model, dummy_prompt, 1).block_until_ready()
+  cached_generate(dummy_model, dummy_prompt, 1).block_until_ready()
+  print("Warmup complete.\n")
 
   kv_cache_memory_table()
   sweep_generation_length()
