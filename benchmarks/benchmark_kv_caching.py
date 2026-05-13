@@ -84,7 +84,7 @@ def sweep_generation_length():
   print("=" * 70)
 
   config = TinformerConfig(B=1, T=128, D_model=512, N=10, H=8)
-  gen_lengths = [10, 25, 50, 100, 200]
+  gen_lengths = [10, 25, 50, 100]
 
   header = ["Tokens Generated", "Naive (s)", "Cached (s)", "Speedup", "Correct"]
   rows = []
@@ -130,7 +130,7 @@ def sweep_num_layers():
   print("Config: D_model=512, H=8, T=128, gen=50, B=1")
   print("=" * 70)
 
-  layer_counts = [2, 4, 6, 10]
+  layer_counts = [4, 6, 8, 10]
   num_tokens_to_generate = 50
 
   header = ["Num Layers (N)", "Naive (s)", "Cached (s)", "Speedup", "Correct"]
