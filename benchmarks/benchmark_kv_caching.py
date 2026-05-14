@@ -267,10 +267,10 @@ if __name__ == "__main__":
   print("Warmup complete.\n")
 
   kv_cache_memory_table()
-  sweep_generation_length()
+  # sweep_generation_length()
   sweep_prompt_length()
-  sweep_num_layers()
-  sweep_model_dimension()
+  # sweep_num_layers()
+  # sweep_model_dimension()
   sweep_per_step_latency()
 
   print("All benchmarks complete.")
