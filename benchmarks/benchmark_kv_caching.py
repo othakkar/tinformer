@@ -202,14 +202,12 @@ def sweep_per_step_latency():
     naive_step_times.append(time.time() - start)
 
   # Cached: measure each step
-  cached_step_times = []
-  start = time.time()
   logits, kv_caches = model.forward(prompt, kv_caches=None)
   probs = jax.nn.softmax(logits[:, -1, :])
   next_token = jnp.argmax(probs, axis=-1, keepdims=True)
   next_token.block_until_ready()
-  cached_step_times.append(time.time() - start)  # prefill step
-
+  
+  cached_step_times = []
   for i in range(num_steps - 1):
     start = time.time()
     logits, kv_caches = model.forward(next_token, kv_caches=kv_caches)
