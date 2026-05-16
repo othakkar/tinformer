@@ -4,34 +4,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'
 
 from src.tinformer import Tinformer
 from src.config import TinformerConfig
+from generate import naive_generate, cached_generate
 
 import jax
 import jax.numpy as jnp
 import time
-
-def naive_generate(model, input_prompt_token_ids, num_tokens_to_generate):
-  for i in range(num_tokens_to_generate):
-    logits, _ = model.forward(input_prompt_token_ids)
-    probs = jax.nn.softmax(logits[:, -1, :])
-    next_token_ids = jnp.argmax(probs, axis=-1)
-    input_prompt_token_ids = jnp.concatenate(
-        [input_prompt_token_ids, next_token_ids[:, None]], axis=1
-    )
-  return input_prompt_token_ids[:, -num_tokens_to_generate:]
-
-def cached_generate(model, input_prompt_token_ids, num_tokens_to_generate):
-  logits, kv_caches = model.forward(input_prompt_token_ids, kv_caches=None)
-  probs = jax.nn.softmax(logits[:, -1, :])
-  next_token_ids = jnp.argmax(probs, axis=-1, keepdims=True)
-
-  generated_tokens = [next_token_ids]
-  for i in range(num_tokens_to_generate - 1):
-    logits, kv_caches = model.forward(next_token_ids, kv_caches=kv_caches)
-    probs = jax.nn.softmax(logits[:, -1, :])
-    next_token_ids = jnp.argmax(probs, axis=-1, keepdims=True)
-    generated_tokens.append(next_token_ids)
-
-  return jnp.concatenate(generated_tokens, axis=1)
 
 def run_benchmark(config, num_tokens_to_generate, warmup=True):
   """Run a single benchmark for a given config and generation length."""
@@ -76,38 +53,15 @@ def print_results_table(header, rows):
     print(fmt.format(*row))
   print()
 
-def sweep_generation_length():
-  """Sweep: vary number of tokens to generate."""
-  print("=" * 70)
-  print("SWEEP 1: Varying num_tokens_to_generate")
-  print("Config: D_model=512, N=10, H=8, T=128 (prompt), B=1")
-  print("=" * 70)
-
-  config = TinformerConfig(B=1, T=128, D_model=512, N=10, H=8)
-  gen_lengths = [10, 25, 50, 100]
-
-  header = ["Tokens Generated", "Naive (s)", "Cached (s)", "Speedup", "Correct"]
-  rows = []
-  for n_tokens in gen_lengths:
-    result = run_benchmark(config, n_tokens)
-    rows.append([
-      str(n_tokens),
-      f"{result['naive_time']:.3f}",
-      f"{result['cached_time']:.3f}",
-      f"{result['speedup']:.2f}x",
-      str(result['correct']),
-    ])
-  print_results_table(header, rows)
-
 def sweep_prompt_length():
   """Sweep: vary prompt length T."""
   print("=" * 70)
-  print("SWEEP 2: Varying prompt length (T)")
-  print("Config: D_model=512, N=10, H=8, gen=50, B=1")
+  print("Varying prompt length (T)")
+  print("Config: D_model=512, N=10, H=8, gen=100, B=1")
   print("=" * 70)
 
   prompt_lengths = [32, 64, 128, 256, 512]
-  num_tokens_to_generate = 50
+  num_tokens_to_generate = 100
 
   header = ["Prompt Length (T)", "Naive (s)", "Cached (s)", "Speedup", "Correct"]
   rows = []
@@ -123,113 +77,31 @@ def sweep_prompt_length():
     ])
   print_results_table(header, rows)
 
-def sweep_num_layers():
-  """Sweep: vary number of decoder layers N."""
-  print("=" * 70)
-  print("SWEEP 3: Varying number of layers (N)")
-  print("Config: D_model=512, H=8, T=128, gen=50, B=1")
-  print("=" * 70)
-
-  layer_counts = [4, 6, 8, 10]
-  num_tokens_to_generate = 50
-
-  header = ["Num Layers (N)", "Naive (s)", "Cached (s)", "Speedup", "Correct"]
-  rows = []
-  for N in layer_counts:
-    config = TinformerConfig(B=1, T=128, D_model=512, N=N, H=8)
-    result = run_benchmark(config, num_tokens_to_generate)
-    rows.append([
-      str(N),
-      f"{result['naive_time']:.3f}",
-      f"{result['cached_time']:.3f}",
-      f"{result['speedup']:.2f}x",
-      str(result['correct']),
-    ])
-  print_results_table(header, rows)
-
-def sweep_model_dimension():
-  """Sweep: vary model dimension D_model."""
-  print("=" * 70)
-  print("SWEEP 4: Varying model dimension (D_model)")
-  print("Config: N=6, H=8, T=128, gen=50, B=1")
-  print("=" * 70)
-
-  dims = [128, 256, 512]
-  num_tokens_to_generate = 50
-
-  header = ["D_model", "D_k", "Naive (s)", "Cached (s)", "Speedup", "Correct"]
-  rows = []
-  for D in dims:
-    D_k = D // 8  # Keep D_k proportional
-    config = TinformerConfig(B=1, T=128, D_model=D, D_k=D_k, D_v=D_k, N=6, H=8)
-    result = run_benchmark(config, num_tokens_to_generate)
-    rows.append([
-      str(D),
-      str(D_k),
-      f"{result['naive_time']:.3f}",
-      f"{result['cached_time']:.3f}",
-      f"{result['speedup']:.2f}x",
-      str(result['correct']),
-    ])
-  print_results_table(header, rows)
-
 def sweep_per_step_latency():
   """Measure per-step latency for naive vs. cached to show constant vs. growing cost."""
   print("=" * 70)
-  print("SWEEP 5: Per-step latency (naive grows, cached stays flat)")
+  print("Per-step latency (naive grows, cached stays flat)")
   print("Config: D_model=512, N=10, H=8, T=64, B=1")
   print("=" * 70)
 
   config = TinformerConfig(B=1, T=64, D_model=512, N=10, H=8)
-  model = Tinformer(config)
-  prompt = jax.random.randint(jax.random.PRNGKey(0), (config.B, config.T), 0, config.vocab_size)
-  num_steps = 50
+  gen_lengths = [i*10 for i in range(1, 11)]  # 10, 20, ..., 100 tokens
 
-  # Warmup both paths: use full step count to compile all intermediate shapes
-  naive_generate(model, prompt, num_steps).block_until_ready()
-  cached_generate(model, prompt, num_steps).block_until_ready()
-
-  # Naive: measure each step
-  naive_step_times = []
-  current_ids = prompt
-  for i in range(num_steps):
-    start = time.time()
-    logits, _ = model.forward(current_ids)
-    probs = jax.nn.softmax(logits[:, -1, :])
-    next_token = jnp.argmax(probs, axis=-1)
-    current_ids = jnp.concatenate([current_ids, next_token[:, None]], axis=1)
-    current_ids.block_until_ready()
-    naive_step_times.append(time.time() - start)
-
-  # Cached: measure each step
-  logits, kv_caches = model.forward(prompt, kv_caches=None)
-  probs = jax.nn.softmax(logits[:, -1, :])
-  next_token = jnp.argmax(probs, axis=-1, keepdims=True)
-  next_token.block_until_ready()
-  
-  cached_step_times = []
-  for i in range(num_steps - 1):
-    start = time.time()
-    logits, kv_caches = model.forward(next_token, kv_caches=kv_caches)
-    probs = jax.nn.softmax(logits[:, -1, :])
-    next_token = jnp.argmax(probs, axis=-1, keepdims=True)
-    next_token.block_until_ready()
-    cached_step_times.append(time.time() - start)
-
-  header = ["Step", "Naive (ms)", "Cached (ms)"]
+  header = ["Tokens Generated", "Naive per-step (ms)", "Cached per-step (ms)"]
   rows = []
-  for i in range(0, num_steps, 5):  # Print every 5th step
+  for n_tokens in gen_lengths:
+    result = run_benchmark(config, n_tokens)
     rows.append([
-      str(i + 1),
-      f"{naive_step_times[i] * 1000:.1f}",
-      f"{cached_step_times[i] * 1000:.1f}",
+      str(n_tokens),
+      f"{result['naive_time'] / n_tokens * 1000:.1f}",
+      f"{result['cached_time'] / n_tokens * 1000:.1f}",
     ])
   print_results_table(header, rows)
 
 def kv_cache_memory_table():
   """Show KV cache memory footprint as sequence length grows."""
   print("=" * 70)
-  print("SWEEP 6: KV Cache Memory Footprint")
+  print("KV Cache Memory Footprint")
   print("Config: D_model=512, D_k=32, D_v=32, H=8, N=10, B=1, float32")
   print("=" * 70)
 
@@ -264,11 +136,8 @@ if __name__ == "__main__":
   cached_generate(dummy_model, dummy_prompt, 1).block_until_ready()
   print("Warmup complete.\n")
 
-  kv_cache_memory_table()
-  # sweep_generation_length()
   sweep_prompt_length()
-  # sweep_num_layers()
-  # sweep_model_dimension()
   sweep_per_step_latency()
+  kv_cache_memory_table()
 
   print("All benchmarks complete.")
