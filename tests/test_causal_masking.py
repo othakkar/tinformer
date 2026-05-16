@@ -16,4 +16,4 @@ def test_causal_no_leakage():
     logits_b = model.forward(tokens_b)
 
     # Logits for positions 0-4 should be identical
-    assert jnp.allclose(logits_a[:, :5, :], logits_b[:, :5, :], atol=1e-5)
+    assert jnp.allclose(logits_a[0][:, :5, :], logits_b[0][:, :5, :], atol=1e-5)

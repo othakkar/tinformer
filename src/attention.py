@@ -1,7 +1,9 @@
+import math
+
 import jax
 import jax.numpy as jnp
 
-from .config import TinformerConfig
+from src.config import TinformerConfig
 
 def scaled_dot_product_attention(Q, K, V, mask=None):
   D_k = Q.shape[-1]
@@ -22,26 +24,32 @@ class MultiHeadAttention:
     self.D_v = D_v
 
     keys = jax.random.split(key, 4)
-    self.W_q = jax.random.normal(keys[0], (D_model, H * D_k))
-    self.W_k = jax.random.normal(keys[1], (D_model, H * D_k))
-    self.W_v = jax.random.normal(keys[2], (D_model, H * D_v))
-    self.W_o = jax.random.normal(keys[3], (H * D_v, D_model))
+    self.W_q = jax.random.normal(keys[0], (D_model, H * D_k)) / math.sqrt(D_model)
+    self.W_k = jax.random.normal(keys[1], (D_model, H * D_k)) / math.sqrt(D_model)
+    self.W_v = jax.random.normal(keys[2], (D_model, H * D_v)) / math.sqrt(D_model)
+    self.W_o = jax.random.normal(keys[3], (H * D_v, D_model)) / math.sqrt(H * D_v)
   
-  def __call__(self, X, mask=None):
-    B, T, _ = X.shape
+  def __call__(self, X, mask=None, kv_cache=None):
+    B, T, _ = X.shape  # T=1 when kv_cache is not None
     Q = jnp.dot(X, self.W_q) # (B, T, H * D_k)
     Q = Q.reshape(B, T, self.H, self.D_k).transpose(0, 2, 1, 3) # (B, H, T, D_k)
     K = jnp.dot(X, self.W_k) # (B, T, H * D_k)
     K = K.reshape(B, T, self.H, self.D_k).transpose(0, 2, 1, 3) # (B, H, T, D_k)
     V = jnp.dot(X, self.W_v) # (B, T, H * D_v)
     V = V.reshape(B, T, self.H, self.D_v).transpose(0, 2, 1, 3) # (B, H, T, D_v)
+
+    if kv_cache is not None:
+      cached_K, cached_V = kv_cache
+      K = jnp.concatenate([cached_K, K], axis=2)
+      V = jnp.concatenate([cached_V, V], axis=2)
+
     Z = scaled_dot_product_attention(Q, K, V, mask=mask) # (B, H, T, D_v)
     Z = Z.transpose(0, 2, 1, 3).reshape(B, T, self.H * self.D_v) # (B, T, H * D_v)
-    return jnp.dot(Z, self.W_o) # (B, T, D_model)
+    return jnp.dot(Z, self.W_o), (K, V) # (B, T, D_model)
   
 if __name__ == "__main__":
   config = TinformerConfig()
   mha = MultiHeadAttention(config.D_model, config.D_k, config.D_v, config.H)
   X = jax.random.normal(jax.random.PRNGKey(0), (config.B, config.T, config.D_model))
   mask = jnp.tril(jnp.ones((config.T, config.T), dtype=bool)) # (T, T)
-  print("MultiHeadAttention output shape: ", mha(X, mask=mask).shape)
+  print("MultiHeadAttention output shape: ", mha(X, mask=mask)[0].shape)

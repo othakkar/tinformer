@@ -1,10 +1,10 @@
 import jax
 import jax.numpy as jnp
 
-from .attention import MultiHeadAttention
-from .layernorm import LayerNorm
-from .ffn import FFN
-from .config import TinformerConfig
+from src.attention import MultiHeadAttention
+from src.layernorm import LayerNorm
+from src.ffn import FFN
+from src.config import TinformerConfig
 
 class DecoderBlock:
   def __init__(
@@ -19,14 +19,14 @@ class DecoderBlock:
 
     self.ffn = FFN(D_model, key=keys[1])
   
-  def __call__(self, hidden_states, attention_mask=None):
+  def __call__(self, hidden_states, attention_mask=None, kv_cache=None):
     normed_hidden_states = self.ln_attn(hidden_states)
-    attention_out = self.attn(
-        normed_hidden_states, mask=attention_mask
+    attention_out, new_kv_cache = self.attn(
+        normed_hidden_states, mask=attention_mask, kv_cache=kv_cache
     )
     residual_after_attention = attention_out + hidden_states
     normed_residual = self.ln_ffn(residual_after_attention)
-    return self.ffn(normed_residual) + residual_after_attention
+    return self.ffn(normed_residual) + residual_after_attention, new_kv_cache
 
 if __name__ == "__main__":
   config = TinformerConfig()
@@ -40,4 +40,4 @@ if __name__ == "__main__":
   mask = jnp.tril(
       jnp.ones((config.T, config.T)), dtype=bool
   )
-  print("Decoder output shape: ", block(X, mask).shape)
+  print("Decoder output shape: ", block(X, mask)[0].shape)

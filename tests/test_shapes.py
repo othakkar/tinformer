@@ -14,10 +14,10 @@ def test_mha_output_shape():
     X = jax.random.normal(jax.random.PRNGKey(0), (B, T, D))
     mask = jnp.tril(jnp.ones((T, T), dtype=bool))
     out = mha(X, mask=mask)
-    assert out.shape == (B, T, D)
+    assert out[0].shape == (B, T, D)
 
 def test_tinformer_output_shape():
     model = Tinformer(config)
     token_ids = jax.random.randint(jax.random.PRNGKey(0), (B, T), 0, config.vocab_size)
-    logits = model.forward(token_ids)
+    logits, _ = model.forward(token_ids)
     assert logits.shape == (B, T, config.vocab_size)

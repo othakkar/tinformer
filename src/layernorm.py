@@ -1,7 +1,7 @@
 import jax
 import jax.numpy as jnp
 
-from .config import TinformerConfig
+from src.config import TinformerConfig
 
 class LayerNorm:
   def __init__(self, D_model, eps=1e-6):
