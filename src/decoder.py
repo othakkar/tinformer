@@ -8,11 +8,11 @@ from src.config import TinformerConfig
 
 class DecoderBlock:
   def __init__(
-      self, D_model, D_k, D_v, H, key=jax.random.PRNGKey(0)
+      self, D_model, D_k, D_v, H, num_kv_heads, key=jax.random.PRNGKey(0)
   ):
     keys = jax.random.split(key, 2)
     self.attn = MultiHeadAttention(
-        D_model, D_k, D_v, H, key=keys[0]
+        D_model, D_k, D_v, H, num_kv_heads, key=keys[0]
     )
     self.ln_attn = LayerNorm(D_model)
     self.ln_ffn = LayerNorm(D_model)
@@ -31,7 +31,8 @@ class DecoderBlock:
 if __name__ == "__main__":
   config = TinformerConfig()
   block = DecoderBlock(
-      config.D_model, config.D_k, config.D_v, config.H
+      config.D_model, config.D_k, config.D_v, config.H,
+      config.num_kv_heads
   )
   X = jax.random.normal(
       jax.random.PRNGKey(0),
