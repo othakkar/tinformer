@@ -8,7 +8,7 @@ from generate import cached_generate, naive_generate
 
 
 def test_cached_matches_naive():
-    config = TinformerConfig(B=2, T=16, D_model=64, D_k=16, D_v=16, H=4, vocab_size=50, N=2, max_seq_len=64)
+    config = TinformerConfig(B=2, T=16, D_model=64, D_k=16, D_v=16, H=4, vocab_size=50, N=2, max_seq_len=64, num_kv_heads=4)
     model = Tinformer(config)
     num_tokens_to_generate = 8
 

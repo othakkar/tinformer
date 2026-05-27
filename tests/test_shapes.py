@@ -10,7 +10,7 @@ config = TinformerConfig()
 B, T, D = config.B, config.T, config.D_model
 
 def test_mha_output_shape():
-    mha = MultiHeadAttention(D, config.D_k, config.D_v, config.H)
+    mha = MultiHeadAttention(D, config.D_k, config.D_v, config.H, config.num_kv_heads)
     X = jax.random.normal(jax.random.PRNGKey(0), (B, T, D))
     mask = jnp.tril(jnp.ones((T, T), dtype=bool))
     out = mha(X, mask=mask)

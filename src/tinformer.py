@@ -16,7 +16,7 @@ class Tinformer:
 
     self.layers = [
       DecoderBlock(
-          config.D_model, config.D_k, config.D_v, config.H, key=keys[i + 2]
+          config.D_model, config.D_k, config.D_v, config.H, config.num_kv_heads, key=keys[i + 2]
       ) for i in range(config.N)
     ]
 

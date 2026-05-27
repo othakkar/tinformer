@@ -11,3 +11,4 @@ class TinformerConfig:
   vocab_size: int = 10000
   N: int = 10
   max_seq_len: int = 1024
+  num_kv_heads: int = 8 # H = MHA, 1 = MQA, between = GQA
