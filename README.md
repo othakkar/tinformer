@@ -3,10 +3,11 @@ A tiny decoder-only transformer in JAX where every component, from scaled dot-pr
 
 ## Tags
 
-| Tag | Description |
-|-----|-------------|
-| [`tinformer-from-scratch`](https://github.com/othakkar/tinformer/tree/tinformer-from-scratch) | Base transformer implementation |
-| [`kv-caching`](https://github.com/othakkar/tinformer/tree/kv-caching) | KV caching with benchmarks |
+| Tag | Description | Article |
+|-----|-------------|---------|
+| [`tinformer-from-scratch`](https://github.com/othakkar/tinformer/tree/tinformer-from-scratch) | Base transformer implementation | [Tinformer: Building a Tiny Transformer from Scratch in JAX](https://open.substack.com/pub/computebound/p/tinformer-building-a-tiny-transformer?r=87stqj&utm_campaign=post&utm_medium=web&showWelcomeOnShare=true) |
+| [`kv-caching`](https://github.com/othakkar/tinformer/tree/kv-caching) | KV caching with benchmarks | [KV Caching from Scratch in JAX](https://open.substack.com/pub/computebound/p/kv-caching-from-scratch-in-jax-eliminating?r=87stqj&utm_campaign=post&utm_medium=web&showWelcomeOnShare=true) |
+| [`mqa-gqa`](https://github.com/othakkar/tinformer/tree/mqa-gqa) | Multi-Query & Grouped-Query Attention | [MQA and GQA: Shrinking the KV Cache in Tinformer](https://open.substack.com/pub/computebound/p/mqa-and-gqa-shrinking-the-kv-cache?r=87stqj&utm_campaign=post&utm_medium=web&showWelcomeOnShare=true) |
 
 ## Repo structure
  
